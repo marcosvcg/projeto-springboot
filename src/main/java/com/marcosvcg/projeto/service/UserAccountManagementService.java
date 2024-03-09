@@ -20,8 +20,9 @@ public class UserAccountManagementService implements ChangeUserCredentials {
         this.userRepository = userRepository;
     }
 
-    private Optional<User> getExistingOptionalUser(Long userId) {
-        return userRepository.findById(userId);
+    private User getExistingUser(Long userId) {
+        Optional<User> optionalUser = userRepository.findById(userId);
+        return optionalUser.orElseThrow(() -> new Exceptions.UserNotFoundException(userId));
     }
 
     private boolean isSamePassword(User user, String password) {
@@ -30,16 +31,18 @@ public class UserAccountManagementService implements ChangeUserCredentials {
     private boolean isSameUsername(User user, String username) {
         return (user.getUsername().equals(username));
     }
+    private boolean isSameEmail(User user, String email) {
+        return (user.getEmail().equals(email));
+    }
 
     @Override
     @Transactional
     public void changeUsername(Long userId, String newUsername) {
-        Optional<User> optionalUser = getExistingOptionalUser(userId);
-        User existingUser = optionalUser.orElseThrow(() -> new Exceptions.UserNotFoundException(userId));
+        User existingUser = getExistingUser(userId);
         if(isSameUsername(existingUser, newUsername)) {
             throw new Exceptions.SameUsernameException();
         }
-        optionalUser = userRepository.findUserByUsername(newUsername);
+        Optional<User> optionalUser = userRepository.findUserByUsername(newUsername);
         if(optionalUser.isPresent()) {
             throw new Exceptions.UsernameAlreadyRegisteredException();
         }
@@ -50,8 +53,7 @@ public class UserAccountManagementService implements ChangeUserCredentials {
     @Override
     @Transactional
     public void changePassword(Long userId, String newPassword) {
-        Optional<User> optionalUser = getExistingOptionalUser(userId);
-        User existingUser = optionalUser.orElseThrow(() -> new Exceptions.UserNotFoundException(userId));
+        User existingUser = getExistingUser(userId);
         if(isSamePassword(existingUser, newPassword)) {
             throw new Exceptions.SamePasswordException();
         }
@@ -63,11 +65,15 @@ public class UserAccountManagementService implements ChangeUserCredentials {
     @Transactional
     public void changeEmail(Long userId, String newEmail) {
         // IMPLEMENTAR VERIFICACAO DE EMAIL!!!
-        Optional<User> optionalUser = getExistingOptionalUser(userId);
-        if(optionalUser.isPresent()) {
-            User existingUser = optionalUser.get();
-            existingUser.setEmail(newEmail);
-            userRepository.save(existingUser);
+        User existingUser = getExistingUser(userId);
+        if(isSameEmail(existingUser, newEmail)) {
+            throw new Exceptions.SameEmailException();
         }
+        Optional<User> optionalUser = userRepository.findUserByEmail(newEmail);
+        if(optionalUser.isPresent()) {
+            throw new Exceptions.EmailAlreadyRegisteredException();
+        }
+        existingUser.setEmail(newEmail);
+        userRepository.save(existingUser);
     }
 }

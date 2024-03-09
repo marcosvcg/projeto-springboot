@@ -23,6 +23,12 @@ public class Exceptions {
         }
     }
 
+    public static class SameEmailException extends IllegalArgumentException {
+        public SameEmailException() {
+            super("Please choose a email different from your previous one.");
+        }
+    }
+
     public static class EmailAlreadyRegisteredException extends DuplicateKeyException {
         public EmailAlreadyRegisteredException() {
             super("Email already registered.");
@@ -34,5 +40,4 @@ public class Exceptions {
             super("Username already registered.");
         }
     }
-
 }

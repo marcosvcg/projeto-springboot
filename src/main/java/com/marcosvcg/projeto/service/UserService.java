@@ -22,6 +22,10 @@ public class UserService {
     public List<User> getUsers() {
         return userRepository.findAll();
     }
+    public User getUserById(Long userId) {
+        Optional<User> optionalUser = userRepository.findById(userId);
+        return optionalUser.orElseThrow(() -> new Exceptions.UserNotFoundException(userId));
+    }
 
     public void createUser(User user) {
         Optional<User> optionalUser = userRepository.findUserByUsername(user.getUsername());
@@ -42,4 +46,5 @@ public class UserService {
         }
         userRepository.deleteById(userId);
     }
+
 }
